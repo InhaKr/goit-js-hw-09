@@ -59,7 +59,7 @@ function timerStart() {
       refs.dateInput.disabled = false;
       Report.info(
         'Timer stopped!',
-        'Please, if you want to start timer, choose a new date and click on start',
+        'Please, if you want to start timer, choose a new date, click on start',
 
       );
       return;
