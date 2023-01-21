@@ -30,7 +30,6 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    // console.log(selectedDates[0]);
     onDateCheck(selectedDates);
   }
 }
