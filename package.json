@@ -1,9 +1,9 @@
 {
   "name": "parcel-project-template",
   "version": "2.0.0",
-  "homepage": "https://InhaKr.github.io/goit-js-hw-09/",
+  "homepage": "https://InhaKr.github.io/goit-js-hw-09",
   "scripts": {
-    "start": "parcel src/*.html",
+    "start": "parcel src/*.html -p 5000 --open",
     "build": "parcel build src/*.html --public-url /goit-js-hw-09/"
   },
   "repository": {
@@ -19,7 +19,7 @@
   "dependencies": {
     "flatpickr": "^4.6.13",
     "modern-normalize": "^1.1.0",
-    "notiflix": "^3.2.6"
+    "notiflix": "^3.2.5"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.6.0",
@@ -27,7 +27,5 @@
     "parcel-reporter-clean-dist": "^1.0.4",
     "posthtml-include": "^1.7.4"
   },
-  "browserslist": "> 0.5%, last 2 versions, not dead",
-  "main": "index.js",
-  "description": ""
+  "browserslist": "> 0.5%, last 2 versions, not dead"
 }
