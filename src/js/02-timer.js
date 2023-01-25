@@ -1,11 +1,13 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import {
-  Report
-} from 'notiflix/build/notiflix-report-aio';
+  Notify
+} from 'notiflix/build/notiflix-notify-aio';
 
+// //мои ссылки
 const refs = {
   body: document.querySelector('body'),
+
   dateInput: document.querySelector('input#datetime-picker'),
   btnStartTimer: document.querySelector('button[data-start-timer]'),
   daysRemaining: document.querySelector('[data-days]'),
@@ -15,14 +17,10 @@ const refs = {
 }
 
 refs.body.style.backgroundColor = '#d6f2a5';
-refs.btnStartTimer.disabled = true;
-refs.btnStartTimer.addEventListener('click', timerStart);
 
-const TIMER_DELAY = 1000;
 let timerId = null;
-let selectedDate = null;
-let currentDate = null;
 let remainingTime = 0;
+let formatDate = null;
 
 const options = {
   enableTime: true,
@@ -30,62 +28,30 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    onDateCheck(selectedDates);
+    onDateCheck(selectedDates[0]);
   }
 }
-
+refs.btnStartTimer.setAttribute('disabled', true);
+// появление календаря
 flatpickr(refs.dateInput, options);
+refs.btnStartTimer.addEventListener('click', onBtnStart);
 
-function onDateCheck(selectedDates) {
-  selectedDate = selectedDates[0].getTime();
-  currentDate = new Date().getTime();
+window.addEventListener('keydown', e => {
+  if (e.code === 'Escape' && timerId) {
+    clearInterval(timerId);
 
-  if (selectedDate > currentDate) {
-    refs.btnStartTimer.disabled = false;
-    return;
+    refs.dateInput.removeAttribute('disabled');
+    refs.btnStartTimer.setAttribute('disabled', true);
+
+    refs.secondsRemaining.textContent = '00';
+    refs.minutesRemaining.textContent = '00';
+    refs.hoursRemaining.textContent = '00';
+    refs.daysRemaining.textContent = '00';
   }
-  Report.failure(
-    'Please choose a date in the future',
-  );
-}
+});
 
-function timerStart() {
-  timerId = setInterval(() => {
-    currentDate = new Date().getTime();
-    if (selectedDate - currentDate < 1000) {
-      clearInterval(timerId);
-      refs.btnStartTimer.disabled = true;
-      refs.dateInput.disabled = false;
-      Report.info(
-        'Timer stopped!',
-        'Please, if you want to start timer, choose a new date and click on start',
-
-      );
-      return;
-    } else {
-      refs.btnStartTimer.disabled = true;
-      refs.dateInput.disabled = true;
-      currentDate += 1000;
-      remainingTime = Math.floor(selectedDate - currentDate);
-      convertMs(remainingTime);
-    }
-  }, TIMER_DELAY);
-}
-
-function createMarkup({
-  days,
-  hours,
-  minutes,
-  seconds
-}) {
-  refs.daysRemaining.textContent = days;
-  refs.hoursRemaining.textContent = hours;
-  refs.minutesRemaining.textContent = minutes;
-  refs.secondsRemaining.textContent = seconds;
-}
-
-function addLeadingZero(value) {
-  return String(value).padStart(2, '0');
+function onBtnStart() {
+  timerId = setInterval(startTimer, 1000);
 }
 
 function convertMs(ms) {
@@ -94,20 +60,63 @@ function convertMs(ms) {
   const hour = minute * 60;
   const day = hour * 24;
 
-  const days = addLeadingZero(Math.floor(ms / day));
-  const hours = addLeadingZero(Math.floor((ms % day) / hour));
-  const minutes = addLeadingZero(Math.floor(((ms % day) % hour) / minute));
-  const seconds = addLeadingZero(Math.floor((((ms % day) % hour) % minute) / second));
-  createMarkup({
-    days,
-    hours,
-    minutes,
-    seconds
-  });
+  // Оставшиеся дни
+  const days = pad(Math.floor(ms / day));
+  // Оставшиеся hours
+  const hours = pad(Math.floor((ms % day) / hour));
+  // Оставшиеся minutes
+  const minutes = pad(Math.floor(((ms % day) % hour) / minute));
+  // Оставшиеся seconds
+  const seconds = pad(Math.floor((((ms % day) % hour) % minute) / second));
+
   return {
     days,
     hours,
     minutes,
     seconds
   };
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+// календарь для выбора
+function onDateCheck(selectedDates) {
+  const currentDate = Date.now();
+
+  if (selectedDates < currentDate) {
+    refs.btnStartTimer.setAttribute('disabled', true);
+    return Notify.failure('Please choose a date in the future');
+  };
+
+  remainingTime = selectedDates.getTime() - currentDate;
+  formatDate = convertMs(remainingTime);
+
+  createMarkup(formatDate);
+  refs.btnStartTimer.removeAttribute('disabled');
+
+}
+
+function startTimer() {
+
+  refs.btnStartTimer.setAttribute('disabled', true);
+  refs.dateInput.setAttribute('disabled', true);
+
+  remainingTime -= 1000;
+
+  if (refs.secondsRemaining.textContent <= 0 && refs.minutesRemaining.textContent <= 0) {
+    Notify.success('Time end');
+    clearInterval(timerId);
+  } else {
+    formatDate = convertMs(remainingTime);
+    createMarkup(formatDate);
+  }
+}
+
+function createMarkup(formatDate) {
+  refs.secondsRemaining.textContent = formatDate.seconds;
+  refs.minutesRemaining.textContent = formatDate.minutes;
+  refs.hoursRemaining.textContent = formatDate.hours;
+  refs.daysRemaining.textContent = formatDate.days;
 }
